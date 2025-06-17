@@ -1,4 +1,10 @@
-FROM grafana/tempo:2.7.1
-COPY tempo.yaml /etc/tempo.yaml
-ENTRYPOINT ["/tempo"]
-CMD ["-config.file=/etc/tempo.yaml"]
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+CMD ["python", "main.py"]
