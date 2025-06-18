@@ -29,6 +29,17 @@ services:
     networks:
       - observability
 
+  promtail:
+    image: grafana/promtail:latest
+    volumes:
+      - ./promtail-config.yaml:/etc/promtail/config.yaml
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/config.yaml
+    depends_on:
+      - loki
+    networks:
+      - observability
+
   tempo:
     container_name: tempo
     image: grafana/tempo:2.7.1

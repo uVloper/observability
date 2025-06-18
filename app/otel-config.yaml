@@ -15,7 +15,7 @@ processors:
 
   resource:
     attributes:
-      - action: insert
+      - action: upsert
         key: service.name
         value: observabilidade-app
 
@@ -27,7 +27,7 @@ exporters:
     endpoint: http://loki:3100/loki/api/v1/push
 
   otlp:
-    endpoint: tempo:4317
+    endpoint: tempo:9095
     tls:
       insecure: true
     headers:
