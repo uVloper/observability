@@ -26,8 +26,8 @@ exporters:
   loki:
     endpoint: http://loki:3100/loki/api/v1/push
 
-  otlp:
-    endpoint: tempo:9095
+  otlphttp/tempo:
+    endpoint: http://tempo:4318
     tls:
       insecure: true
     headers:
@@ -38,10 +38,10 @@ service:
     traces:
       receivers: [otlp]
       processors: [resource, batch, spanmetrics]
-      exporters: [otlp]
+      exporters: [otlphttp/tempo]
 
     metrics:
-      receivers: [otlp]  # <- Corrigido aqui
+      receivers: [otlp]
       processors: [batch]
       exporters: [prometheus]
 

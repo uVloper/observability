@@ -24,7 +24,7 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
 from opentelemetry._logs import set_logger_provider
 
 # Criar um recurso compartilhado
-resource = Resource.create({SERVICE_NAME: "python-app"})
+resource = Resource.create({SERVICE_NAME: "observabilidade-app"})
 
 # Configuração básica de logging
 logging.basicConfig(level=logging.INFO)

@@ -44,7 +44,7 @@ services:
     container_name: tempo
     image: grafana/tempo:2.7.1
     ports:
-      - "3200:3200"
+      - "3200:3200"         # Tempo UI (HTTP)
     volumes:
       - ./tempo.yaml:/etc/tempo.yaml
     command: ["-config.file=/etc/tempo.yaml"]
@@ -74,10 +74,9 @@ services:
       - ./app/otel-config.yaml:/etc/otel/config.yaml
     command: ["--config=/etc/otel/config.yaml"]
     ports:
-      - "4317:4317"
-      - "4318:4318"
-      - "55681:55681"
-      - "8889:8889"
+      - "4317:4317"        # GRPC OTLP Receiver (exposto)
+      - "4318:4318"        # HTTP OTLP Receiver (exposto)
+      - "8889:8889"        # Span metrics para Prometheus
     depends_on:
       - tempo
       - loki
