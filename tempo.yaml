@@ -23,3 +23,10 @@ storage:
     backend: local
     local:
       path: /tmp/tempo/traces
+
+metrics_generator:
+  processor:
+      span_metrics:
+        dimensions: [service.name, span.name]
+  storage:
+      path: /tmp/tempo/generator
