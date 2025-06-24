@@ -1,0 +1,113 @@
+version: '3.7'
+
+volumes:
+  loki-data:
+
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - observability
+
+  loki:
+    container_name: loki
+    image: grafana/loki:3.5.1-amd64
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./loki-config.yaml:/etc/loki/loki-config.yaml
+      - loki-data:/loki
+    networks:
+      - observability
+
+  promtail:
+    image: grafana/promtail:latest
+    volumes:
+      - ./promtail-config.yaml:/etc/promtail/config.yaml
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/config.yaml
+    depends_on:
+      - loki
+    networks:
+      - observability
+
+  tempo:
+    container_name: tempo
+    image: grafana/tempo:2.7.1
+    ports:
+      - "3200:3200"         # Tempo UI (HTTP)
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml
+    command: ["-config.file=/etc/tempo.yaml"]
+    networks:
+      - observability
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    networks:
+      - observability
+
+  otel-collector:
+    container_name: otel-collector
+    image: otel/opentelemetry-collector-contrib:0.95.0
+    volumes:
+      - ./app/otel-config.yaml:/etc/otel/config.yaml
+    command: ["--config=/etc/otel/config.yaml"]
+    ports:
+      - "4317:4317"        # GRPC OTLP Receiver (exposto)
+      - "4318:4318"        # HTTP OTLP Receiver (exposto)
+      - "8889:8889"        # Span metrics para Prometheus
+    depends_on:
+      - tempo
+      - loki
+    networks:
+      - observability
+
+  app:
+    container_name: app
+    build:
+      context: ./app
+    ports:
+      - "8000:8000"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+    networks:
+      - observability
+
+
+  dronetracks:
+    build:
+      context: /mnt/c/Users/Balaústre/Downloads/dronetracks
+    container_name: dronetracks
+    ports:
+      - "5100:5100"
+    networks:
+      - observability
+    labels:
+      - "service=dronetracks"
+    environment:
+      - OTEL_RESOURCE_SERVICE_NAME=dronetracks
+
+
+
+
+networks:
+  observability:
+    driver: bridge

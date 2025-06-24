@@ -1,0 +1,51 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+processors:
+  resource:
+    attributes:
+      - action: upsert
+        key: service.name
+        from_attribute: service.name
+
+  spanmetrics:
+    metrics_exporter: prometheus
+    dimensions:
+      - name: http.method
+      - name: http.status_code
+
+  batch: {}
+
+exporters:
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+
+  loki:
+    endpoint: http://loki:3100/loki/api/v1/push
+
+  otlphttp/tempo:
+    endpoint: http://tempo:4318
+    tls:
+      insecure: true
+    headers:
+      X-Scope-OrgID: single-tenant
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [resource, batch, spanmetrics]
+      exporters: [otlphttp/tempo]
+
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus]
+
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [loki]
